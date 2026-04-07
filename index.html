@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gamepix Arcade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+
+    header {
+      padding: 15px;
+      text-align: center;
+      background: #1e293b;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    #games {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 15px;
+      padding: 15px;
+    }
+
+    .game-card {
+      background: #1e293b;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .game-card:hover {
+      transform: scale(1.05);
+    }
+
+    .game-card img {
+      width: 100%;
+    }
+
+    .game-title {
+      padding: 10px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    #player {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      display: none;
+      flex-direction: column;
+    }
+
+    #closeBtn {
+      background: red;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
+    }
+
+    #info {
+      padding: 10px;
+      background: #111;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<header>🎮 Gamepix Arcade</header>
+
+<div id="games"></div>
+
+<div id="player">
+  <button id="closeBtn">Close Game</button>
+  <iframe id="gameFrame"></iframe>
+  <div id="info">Score: 0 | Level: 0</div>
+</div>
+
+<script>
+const sid = "1"; // your Gamepix ID
+const API_URL = `https://feeds.gamepix.com/v2/json?order=quality&page=1&pagination=24&sid=${sid}`;
+
+const gamesContainer = document.getElementById("games");
+const player = document.getElementById("player");
+const iframe = document.getElementById("gameFrame");
+const info = document.getElementById("info");
+
+let currentScore = 0;
+let currentLevel = 0;
+
+/**
+ * Fetch games from Gamepix
+ */
+async function loadGames() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+
+    data.items.forEach(game => {
+      const card = document.createElement("div");
+      card.className = "game-card";
+
+      card.innerHTML = `
+        <img src="${game.banner_image}" />
+        <div class="game-title">${game.title}</div>
+      `;
+
+      card.onclick = () => openGame(game);
+
+      gamesContainer.appendChild(card);
+    });
+  } catch (err) {
+    console.error("Error loading games:", err);
+  }
+}
+
+/**
+ * Open selected game
+ */
+function openGame(game) {
+  iframe.src = game.url;
+  player.style.display = "flex";
+
+  currentScore = 0;
+  currentLevel = 0;
+  updateInfo();
+}
+
+/**
+ * Close game
+ */
+document.getElementById("closeBtn").onclick = () => {
+  iframe.src = "";
+  player.style.display = "none";
+};
+
+/**
+ * Update UI info
+ */
+function updateInfo() {
+  info.innerText = `Score: ${currentScore} | Level: ${currentLevel}`;
+}
+
+/**
+ * Listen to Gamepix events
+ */
+window.addEventListener("message", (e) => {
+  if (!e.data) return;
+
+  switch (e.data.type) {
+    case "update_score":
+      currentScore = e.data.score;
+      updateInfo();
+      break;
+
+    case "update_level":
+      currentLevel = e.data.level;
+      updateInfo();
+      break;
+  }
+});
+
+/**
+ * Init
+ */
+loadGames();
+</script>
+
+</body>
+</html>
