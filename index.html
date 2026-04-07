@@ -13,18 +13,37 @@ body {
   color: white;
 }
 
-/* HEADER */
+/* 🐅 HEADER */
 header {
-  padding: 20px;
+  padding: 20px 10px;
   text-align: center;
-  font-size: 28px;
-  font-weight: bold;
-  color: #ff9900;
-  background: linear-gradient(90deg, #000, #1a1a1a);
-  border-bottom: 4px solid #ff9900;
+  background: radial-gradient(circle at center, #1a1a1a, #000);
+  border-bottom: 3px solid #ff9900;
 }
 
-/* 🐾 CLAW CATEGORY TABS */
+.logo {
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 3px;
+
+  background: linear-gradient(45deg, #ff9900, #ffcc00, #ff6600);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  text-shadow: 
+    0 0 10px rgba(255,150,0,0.6),
+    0 0 20px rgba(255,120,0,0.4);
+}
+
+.tagline {
+  font-size: 14px;
+  color: #ffcc66;
+  margin-top: 5px;
+  opacity: 0.8;
+  letter-spacing: 1px;
+}
+
+/* 🐾 CATEGORY TABS */
 #categories {
   display: flex;
   gap: 10px;
@@ -36,7 +55,7 @@ header {
   padding: 10px 15px;
   background: #1a1a1a;
   border: 2px solid #ff9900;
-  border-radius: 20px 5px 20px 5px; /* claw shape */
+  border-radius: 20px 5px 20px 5px;
   cursor: pointer;
   white-space: nowrap;
   transition: 0.2s;
@@ -93,6 +112,10 @@ header {
   cursor: pointer;
 }
 
+#loadMore:hover {
+  transform: scale(1.05);
+}
+
 /* PLAYER */
 #player {
   position: fixed;
@@ -128,7 +151,11 @@ iframe {
 
 <body>
 
-<header>🐅 TIGER JUNGLE ARCADE 🐅</header>
+<!-- 🐅 HEADER -->
+<header>
+  <div class="logo">🐅 TIGER JUNGLE ARCADE 🐅</div>
+  <div class="tagline">Enter the Wild • Play the Best Games</div>
+</header>
 
 <!-- 🐾 CATEGORY TABS -->
 <div id="categories">
@@ -140,18 +167,20 @@ iframe {
   <div class="category" onclick="setCategory('racing')">Racing</div>
 </div>
 
+<!-- GAME GRID -->
 <div id="games"></div>
 <button id="loadMore">🐾 Load More Games</button>
 
+<!-- PLAYER -->
 <div id="player">
   <button id="closeBtn">❌ Exit Jungle</button>
   <iframe id="gameFrame"></iframe>
   <div id="info">Score: 0 | Level: 0</div>
 </div>
 
-<!-- 🔊 AUDIO -->
-<audio id="roar" src="https://www.soundjay.com/animal/tiger-roar-1.mp3"></audio>
-<audio id="jungle" src="https://www.soundjay.com/nature/birds-chirping-1.mp3" loop></audio>
+<!-- 🔊 YOUR LOCAL AUDIO FILES -->
+<audio id="roar" src="sounds/tiger-roar.mp3" preload="auto"></audio>
+<audio id="jungle" src="sounds/jungle-ambience.mp3" loop preload="auto"></audio>
 
 <script>
 const sid = "1";
@@ -170,8 +199,12 @@ const jungle = document.getElementById("jungle");
 let score = 0;
 let level = 0;
 
+/* 🔊 SOUND SETTINGS */
+jungle.volume = 0.3;
+roar.volume = 0.8;
+
 /**
- * Start jungle sound (after user interaction)
+ * Start jungle sound after first click
  */
 document.body.addEventListener("click", () => {
   jungle.play().catch(()=>{});
@@ -217,7 +250,7 @@ async function loadGames(reset = false) {
 }
 
 /**
- * Change category
+ * Category switch
  */
 function setCategory(cat) {
   currentCategory = cat;
