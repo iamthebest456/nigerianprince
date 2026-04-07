@@ -1,117 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Gamepix Arcade</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Gamepix Full Arcade</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+}
 
-    header {
-      padding: 15px;
-      text-align: center;
-      background: #1e293b;
-      font-size: 24px;
-      font-weight: bold;
-    }
+header {
+  padding: 15px;
+  text-align: center;
+  background: #1e293b;
+  font-size: 24px;
+}
 
-    #games {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 15px;
-      padding: 15px;
-    }
+#games {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+  padding: 15px;
+}
 
-    .game-card {
-      background: #1e293b;
-      border-radius: 10px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
+.game-card {
+  background: #1e293b;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+}
 
-    .game-card:hover {
-      transform: scale(1.05);
-    }
+.game-card img {
+  width: 100%;
+}
 
-    .game-card img {
-      width: 100%;
-    }
+.game-title {
+  padding: 10px;
+  text-align: center;
+}
 
-    .game-title {
-      padding: 10px;
-      font-size: 14px;
-      text-align: center;
-    }
+#loadMore {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background: #22c55e;
+  border: none;
+  cursor: pointer;
+  color: white;
+  font-size: 16px;
+}
 
-    #player {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: black;
-      display: none;
-      flex-direction: column;
-    }
+#player {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  display: none;
+  flex-direction: column;
+}
 
-    #closeBtn {
-      background: red;
-      color: white;
-      border: none;
-      padding: 10px;
-      cursor: pointer;
-    }
+iframe {
+  flex: 1;
+  border: none;
+}
 
-    iframe {
-      flex: 1;
-      width: 100%;
-      border: none;
-    }
+#closeBtn {
+  background: red;
+  border: none;
+  color: white;
+  padding: 10px;
+  cursor: pointer;
+}
 
-    #info {
-      padding: 10px;
-      background: #111;
-      font-size: 14px;
-    }
-  </style>
+#info {
+  padding: 10px;
+  background: #111;
+}
+</style>
 </head>
+
 <body>
 
-<header>🎮 Gamepix Arcade</header>
+<header>🎮 Gamepix Infinite Arcade</header>
 
 <div id="games"></div>
+<button id="loadMore">Load More Games</button>
 
 <div id="player">
-  <button id="closeBtn">Close Game</button>
+  <button id="closeBtn">Close</button>
   <iframe id="gameFrame"></iframe>
   <div id="info">Score: 0 | Level: 0</div>
 </div>
 
 <script>
-const sid = "1"; // your Gamepix ID
-const API_URL = `https://feeds.gamepix.com/v2/json?order=quality&page=1&pagination=24&sid=${sid}`;
+const sid = "1";
+let currentPage = 1;
+const perPage = 24;
 
 const gamesContainer = document.getElementById("games");
-const player = document.getElementById("player");
 const iframe = document.getElementById("gameFrame");
+const player = document.getElementById("player");
 const info = document.getElementById("info");
 
-let currentScore = 0;
-let currentLevel = 0;
+let score = 0;
+let level = 0;
 
 /**
- * Fetch games from Gamepix
+ * Load games page
  */
 async function loadGames() {
+  const url = `https://feeds.gamepix.com/v2/json?order=quality&page=${currentPage}&pagination=${perPage}&sid=${sid}`;
+
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(url);
     const data = await res.json();
 
     data.items.forEach(game => {
@@ -119,28 +126,31 @@ async function loadGames() {
       card.className = "game-card";
 
       card.innerHTML = `
-        <img src="${game.banner_image}" />
+        <img src="${game.banner_image}">
         <div class="game-title">${game.title}</div>
       `;
 
-      card.onclick = () => openGame(game);
+      card.onclick = () => openGame(game.url);
 
       gamesContainer.appendChild(card);
     });
+
+    currentPage++;
+
   } catch (err) {
-    console.error("Error loading games:", err);
+    console.error(err);
   }
 }
 
 /**
- * Open selected game
+ * Open game
  */
-function openGame(game) {
-  iframe.src = game.url;
+function openGame(url) {
+  iframe.src = url;
   player.style.display = "flex";
 
-  currentScore = 0;
-  currentLevel = 0;
+  score = 0;
+  level = 0;
   updateInfo();
 }
 
@@ -153,33 +163,36 @@ document.getElementById("closeBtn").onclick = () => {
 };
 
 /**
- * Update UI info
+ * Update UI
  */
 function updateInfo() {
-  info.innerText = `Score: ${currentScore} | Level: ${currentLevel}`;
+  info.innerText = `Score: ${score} | Level: ${level}`;
 }
 
 /**
- * Listen to Gamepix events
+ * Listen for game events
  */
 window.addEventListener("message", (e) => {
   if (!e.data) return;
 
-  switch (e.data.type) {
-    case "update_score":
-      currentScore = e.data.score;
-      updateInfo();
-      break;
-
-    case "update_level":
-      currentLevel = e.data.level;
-      updateInfo();
-      break;
+  if (e.data.type === "update_score") {
+    score = e.data.score;
   }
+
+  if (e.data.type === "update_level") {
+    level = e.data.level;
+  }
+
+  updateInfo();
 });
 
 /**
- * Init
+ * Load more button
+ */
+document.getElementById("loadMore").onclick = loadGames;
+
+/**
+ * Initial load
  */
 loadGames();
 </script>
