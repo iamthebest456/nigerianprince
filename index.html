@@ -2,24 +2,52 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Gamepix Full Arcade</title>
+<title>Tiger Jungle Arcade 🐅</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
   margin: 0;
   font-family: Arial;
-  background: #0f172a;
+  background: #0b0b0b;
   color: white;
 }
 
+/* HEADER */
 header {
-  padding: 15px;
+  padding: 20px;
   text-align: center;
-  background: #1e293b;
-  font-size: 24px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #ff9900;
+  background: linear-gradient(90deg, #000, #1a1a1a);
+  border-bottom: 4px solid #ff9900;
 }
 
+/* 🐾 CLAW CATEGORY TABS */
+#categories {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  overflow-x: auto;
+}
+
+.category {
+  padding: 10px 15px;
+  background: #1a1a1a;
+  border: 2px solid #ff9900;
+  border-radius: 20px 5px 20px 5px; /* claw shape */
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.category:hover {
+  background: #ff9900;
+  color: black;
+}
+
+/* GAME GRID */
 #games {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -27,11 +55,19 @@ header {
   padding: 15px;
 }
 
+/* GAME CARDS */
 .game-card {
-  background: #1e293b;
-  border-radius: 10px;
+  background: #111;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
+  border: 2px solid #ff9900;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.game-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #ff9900;
 }
 
 .game-card img {
@@ -41,19 +77,23 @@ header {
 .game-title {
   padding: 10px;
   text-align: center;
+  color: #ffcc66;
 }
 
+/* BUTTON */
 #loadMore {
   display: block;
-  margin: 20px auto;
-  padding: 10px 20px;
-  background: #22c55e;
+  margin: 25px auto;
+  padding: 12px 25px;
+  font-weight: bold;
+  color: black;
+  background: linear-gradient(45deg, #ff9900, #ffcc00);
   border: none;
+  border-radius: 8px;
   cursor: pointer;
-  color: white;
-  font-size: 16px;
 }
 
+/* PLAYER */
 #player {
   position: fixed;
   top: 0;
@@ -65,42 +105,58 @@ header {
   flex-direction: column;
 }
 
+#closeBtn {
+  background: #ff3300;
+  border: none;
+  color: white;
+  padding: 12px;
+  cursor: pointer;
+}
+
 iframe {
   flex: 1;
   border: none;
 }
 
-#closeBtn {
-  background: red;
-  border: none;
-  color: white;
-  padding: 10px;
-  cursor: pointer;
-}
-
 #info {
   padding: 10px;
   background: #111;
+  color: #ffcc66;
 }
 </style>
 </head>
 
 <body>
 
-<header>🎮 Gamepix Infinite Arcade</header>
+<header>🐅 TIGER JUNGLE ARCADE 🐅</header>
+
+<!-- 🐾 CATEGORY TABS -->
+<div id="categories">
+  <div class="category" onclick="setCategory('')">All</div>
+  <div class="category" onclick="setCategory('action')">Action</div>
+  <div class="category" onclick="setCategory('arcade')">Arcade</div>
+  <div class="category" onclick="setCategory('puzzle')">Puzzle</div>
+  <div class="category" onclick="setCategory('kids')">Kids</div>
+  <div class="category" onclick="setCategory('racing')">Racing</div>
+</div>
 
 <div id="games"></div>
-<button id="loadMore">Load More Games</button>
+<button id="loadMore">🐾 Load More Games</button>
 
 <div id="player">
-  <button id="closeBtn">Close</button>
+  <button id="closeBtn">❌ Exit Jungle</button>
   <iframe id="gameFrame"></iframe>
   <div id="info">Score: 0 | Level: 0</div>
 </div>
 
+<!-- 🔊 AUDIO -->
+<audio id="roar" src="https://www.soundjay.com/animal/tiger-roar-1.mp3"></audio>
+<audio id="jungle" src="https://www.soundjay.com/nature/birds-chirping-1.mp3" loop></audio>
+
 <script>
 const sid = "1";
 let currentPage = 1;
+let currentCategory = "";
 const perPage = 24;
 
 const gamesContainer = document.getElementById("games");
@@ -108,14 +164,33 @@ const iframe = document.getElementById("gameFrame");
 const player = document.getElementById("player");
 const info = document.getElementById("info");
 
+const roar = document.getElementById("roar");
+const jungle = document.getElementById("jungle");
+
 let score = 0;
 let level = 0;
 
 /**
- * Load games page
+ * Start jungle sound (after user interaction)
  */
-async function loadGames() {
-  const url = `https://feeds.gamepix.com/v2/json?order=quality&page=${currentPage}&pagination=${perPage}&sid=${sid}`;
+document.body.addEventListener("click", () => {
+  jungle.play().catch(()=>{});
+}, { once: true });
+
+/**
+ * Load games
+ */
+async function loadGames(reset = false) {
+  if (reset) {
+    gamesContainer.innerHTML = "";
+    currentPage = 1;
+  }
+
+  let url = `https://feeds.gamepix.com/v2/json?order=quality&page=${currentPage}&pagination=${perPage}&sid=${sid}`;
+  
+  if (currentCategory) {
+    url += `&category=${currentCategory}`;
+  }
 
   try {
     const res = await fetch(url);
@@ -136,16 +211,26 @@ async function loadGames() {
     });
 
     currentPage++;
-
   } catch (err) {
     console.error(err);
   }
 }
 
 /**
- * Open game
+ * Change category
+ */
+function setCategory(cat) {
+  currentCategory = cat;
+  loadGames(true);
+}
+
+/**
+ * Open game + 🐅 ROAR
  */
 function openGame(url) {
+  roar.currentTime = 0;
+  roar.play().catch(()=>{});
+
   iframe.src = url;
   player.style.display = "flex";
 
@@ -170,7 +255,7 @@ function updateInfo() {
 }
 
 /**
- * Listen for game events
+ * Game events
  */
 window.addEventListener("message", (e) => {
   if (!e.data) return;
@@ -187,12 +272,12 @@ window.addEventListener("message", (e) => {
 });
 
 /**
- * Load more button
+ * Load more
  */
-document.getElementById("loadMore").onclick = loadGames;
+document.getElementById("loadMore").onclick = () => loadGames();
 
 /**
- * Initial load
+ * Init
  */
 loadGames();
 </script>
